@@ -85,79 +85,54 @@ The following fields are required in the request body:
 
 ---
 
-### Example Request
-**POST** `/users/register`
-
-**Request Body:**
-```json
-{
-  "fullname": {
-    "firstname": "John",
-    "lastname": "Doe"
-  },
-  "email": "john.doe@example.com",
-  "password": "password123"
-}
-```
-
-**Response Body:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "645c1234567890abcdef1234",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "socketId": null
-  }
-}
-```
-
----
-
 ### Notes
 - Ensure the `.env` file contains the necessary environment variables (`DB_CONNECT`, `JWT_SECRET`, etc.).
 - The password is hashed before being stored in the database.
 
 
-## Endpoint: /users/login — User Login API
-Method
-POST
 
-Endpoint
-bash
-Copy
-Edit
-/users/login
-(Example: https://yourdomain.com/users/login)
+## Endpoint: `/users/login`
 
-Description
-Authenticates a user using email and password.
-Returns a JWT token and basic user information if login is successful.
+### Description
+Authenticates a user using email and password. Returns a JWT token and basic user information if login is successful.
 
-✅ Request Headers
+---
 
-Key	Value
-Content-Type	application/json
-📥 Request Body
-json
-Copy
-Edit
+### Request Method
+**POST**
+
+---
+
+### Request Headers
+
+| Key           | Value              |
+|---------------|--------------------|
+| Content-Type  | application/json   |
+
+---
+
+### Request Body
+
+```json
 {
   "email": "user@example.com",
   "password": "userpassword123"
 }
+```
 
-Field	Type	Required	Validation
-email	String	Yes	Must be a valid email address
-password	String	Yes	Minimum 6 characters
-📤 Successful Response (200 OK)
-json
-Copy
-Edit
+| Field    | Type   | Required | Validation                      |
+|----------|--------|----------|---------------------------------|
+| email    | String | Yes      | Must be a valid email address   |
+| password | String | Yes      | Minimum 6 characters            |
+
+---
+
+### Response
+
+#### Success Response
+- **Status Code:** `200 OK`
+- **Body:**
+```json
 {
   "token": "your-jwt-token-here",
   "user": {
@@ -170,35 +145,31 @@ Edit
     "socketId": null
   }
 }
+```
 
-Field	Description
-token	JWT token for authentication (Bearer token)
-user	Logged-in user’s information (excluding password)
-⚠️ Error Responses
+| Field | Description |
+|-------|-------------|
+| token | JWT token for authentication (Bearer token) |
+| user  | Logged-in user’s information (excluding password) |
 
-Status Code	Description	Example
-400 Bad Request	Validation errors (invalid email format, short password, etc.)	{ "errors": [...] }
-401 Unauthorized	Invalid email or password	{ "message": "Invalid email or password" }
-500 Server Error	Server-side issue	{ "message": "Server error" }
-📌 Example cURL Request
-bash
-Copy
-Edit
-curl --location 'https://yourdomain.com/users/login' \
---header 'Content-Type: application/json' \
---data '{
-  "email": "user@example.com",
-  "password": "userpassword123"
-}'
-🛡️ Notes
-Always send the JWT token in the Authorization header (Bearer token) for protected routes after login.
+#### Error Responses
 
-Ensure frontend validations before calling this API.
+| Status Code | Description                                  | Example                                      |
+|-------------|----------------------------------------------|----------------------------------------------|
+| 400 Bad Request | Validation errors (invalid email format, short password, etc.) | `{ "errors": [...] }`                       |
+| 401 Unauthorized | Invalid email or password                | `{ "message": "Invalid email or password" }` |
+| 500 Server Error | Server-side issue                        | `{ "message": "Server error" }`              |
 
-Passwords are securely hashed and compared using bcrypt.
+---
 
 
-# API Documentation
+---
+
+### Notes
+- Always send the JWT token in the Authorization header (Bearer token) for protected routes after login.
+- Ensure frontend validations before calling this API.
+- Passwords are securely hashed and compared
+
 
 ## Endpoint: `/users/profile`
 
@@ -265,32 +236,11 @@ This endpoint retrieves the profile details of the currently authenticated user.
 
 ---
 
-### Example Request
-**GET** `/users/profile`
-
-**Headers:**
-```
-Authorization: Bearer <your-token>
-```
-
-**Response Body:**
-```json
-{
-  "_id": "645c1234567890abcdef1234",
-  "fullname": {
-    "firstname": "John",
-    "lastname": "Doe"
-  },
-  "email": "john.doe@example.com",
-  "socketId": null
-}
-```
-
----
-
 ### Notes
 - Ensure the JWT token is sent in the `Authorization` header.
 - The token must not be blacklisted or expired.
+
+
 
 ---
 
@@ -339,18 +289,114 @@ This endpoint logs out the currently authenticated user by blacklisting the JWT 
 
 ---
 
-### Example Request
-**GET** `/users/logout`
+### Notes
+- Ensure the JWT token is sent in the `Authorization` header or as a cookie.
+- After logout, the token will be blacklisted and cannot be used again.
 
-**Response Body:**
+
+
+## Endpoint: `/captains/register`
+
+### Description
+This endpoint registers a new captain (driver) in the system. It validates the input data, checks for existing captains with the same email or vehicle plate, hashes the password, and stores the captain in the database. Upon successful registration, it returns a JWT token and the captain object (excluding the password).
+
+---
+
+### Request Method
+**POST**
+
+---
+
+### Request Body
+The following fields are required in the request body:
+
 ```json
 {
-  "message": "Logged out successfully"
+  "fullname": {
+    "firstname": "string (min: 3 characters, required)",
+    "lastname": "string (min: 3 characters, optional)"
+  },
+  "email": "string (valid email format, required)",
+  "password": "string (min: 6 characters, required)",
+  "vehicle": {
+    "color": "string (min: 3 characters, required)",
+    "plate": "string (min: 3 characters, required, unique)",
+    "capacity": "number (min: 1, required)",
+    "vehicleType": "string (one of: car, bike, auto, required)"
+  }
 }
 ```
 
 ---
 
+### Response
+
+#### Success Response
+- **Status Code:** `201 Created`
+- **Body:**
+```json
+{
+  "token": "string (JWT token)",
+  "captain": {
+    "fullname": {
+      "firstname": "string",
+      "lastname": "string"
+    },
+    "email": "string",
+    "password": "string (hashed)",
+    "socketId": "string (optional)",
+    "status": "active",
+    "vehicle": {
+      "color": "string",
+      "plate": "string",
+      "capacity": "number",
+      "vehicleType": "string"
+    },
+    "_id": "string",
+    "__v": "number",
+  }
+}
+```
+
+#### Error Responses
+1. **Validation Error**
+   - **Status Code:** `400 Bad Request`
+   - **Body:**
+   ```json
+   {
+     "errors": [
+       {
+         "msg": "string (error message)",
+         "param": "string (field name)",
+         "location": "string (body)"
+       }
+     ]
+   }
+   ```
+
+2. **Captain Already Exists**
+   - **Status Code:** `400 Bad Request`
+   - **Body:**
+   ```json
+   {
+     "error": "Captain with this email already exists"
+   }
+   ```
+
+3. **Server Error**
+   - **Status Code:** `500 Internal Server Error`
+   - **Body:**
+   ```json
+   {
+     "message": "Server error",
+     "error": "string (error message)"
+   }
+   ```
+
+---
+
 ### Notes
-- Ensure the JWT token is sent in the `Authorization` header or as a cookie.
-- After logout, the token will be blacklisted and cannot be used again.
+- Ensure the `.env` file contains the necessary environment variables (`DB_CONNECT`, `JWT_SECRET`, etc.).
+- The password is hashed before being stored in the database.
+- The vehicle plate must be unique for each captain.
+- The JWT token should be used for authentication in protected
