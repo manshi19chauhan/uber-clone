@@ -1,5 +1,6 @@
-# API Documentation
+# API DOCUMENTATION
 
+# USER Endpoints
 ## Endpoint: `/users/register`
 
 ### Description
@@ -295,6 +296,7 @@ This endpoint logs out the currently authenticated user by blacklisting the JWT 
 
 
 
+# CAPTAIN Endpoints
 ## Endpoint: `/captains/register`
 
 ### Description
@@ -400,3 +402,192 @@ The following fields are required in the request body:
 - The password is hashed before being stored in the database.
 - The vehicle plate must be unique for each captain.
 - The JWT token should be used for authentication in protected
+
+
+
+## Endpoint: `/captains/login`
+
+### Description
+Authenticates a captain (driver) using email and password. Returns a JWT token and the captain object if login is successful.
+
+---
+
+### Request Method
+**POST**
+
+---
+
+### Request Headers
+
+| Key           | Value              |
+|---------------|--------------------|
+| Content-Type  | application/json   |
+
+---
+
+### Request Body
+
+```json
+{
+  "email": "captain@example.com",
+  "password": "captainpassword123"
+}
+```
+
+| Field    | Type   | Required | Validation                      |
+|----------|--------|----------|---------------------------------|
+| email    | String | Yes      | Must be a valid email address   |
+| password | String | Yes      | Minimum 6 characters            |
+
+---
+
+### Response
+
+#### Success Response
+- **Status Code:** `200 OK`
+- **Body:**
+```json
+{
+  "token": "your-jwt-token-here",
+  "captain": {
+    "_id": "captainId",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "captain@example.com",
+    "password": "hashedPassword",
+    "socketId": null,
+    "status": "active",
+    "vehicle": {
+      "color": "Red",
+      "plate": "XYZ123",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "__v": 0
+  }
+}
+```
+
+#### Error Responses
+
+| Status Code | Description                                  | Example                                      |
+|-------------|----------------------------------------------|----------------------------------------------|
+| 400 Bad Request | Validation errors or invalid credentials | `{ "errors": [...] }` or `{ "error": "Invalid email or password" }` |
+| 500 Server Error | Server-side issue                        | `{ "error": "Internal server error" }`       |
+
+---
+
+### Notes
+- Always send the JWT token in the Authorization header (Bearer token) for protected captain routes after login.
+- Passwords are securely hashed and compared.
+
+
+---
+
+
+
+## Endpoint: `/captains/profile`
+
+### Description
+Retrieves the profile details of the currently authenticated captain. Requires a valid JWT token for authentication.
+
+---
+
+### Request Method
+**GET**
+
+---
+
+### Request Headers
+- **Authorization:** `Bearer <JWT token>`
+
+---
+
+### Response
+
+#### Success Response
+- **Status Code:** `200 OK`
+- **Body:**
+```json
+{
+  "captain": {
+    "_id": "captainId",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "captain@example.com",
+    "socketId": null,
+    "status": "active",
+    "vehicle": {
+      "color": "Red",
+      "plate": "XYZ123",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "__v": 0
+  }
+}
+```
+
+#### Error Responses
+
+| Status Code | Description                                  | Example                                      |
+|-------------|----------------------------------------------|----------------------------------------------|
+| 401 Unauthorized | Missing or invalid token                 | `{ "message": "Unauthorized" }`              |
+| 404 Not Found    | Captain not found                        | `{ "error": "Captain not found" }`           |
+| 500 Server Error | Server-side issue                        | `{ "error": "Internal server error" }`       |
+
+---
+
+### Notes
+- Ensure the JWT token is sent in the `Authorization` header.
+- The token must not be blacklisted or expired.
+
+
+---
+
+
+
+## Endpoint: `/captains/logout`
+
+### Description
+Logs out the currently authenticated captain by blacklisting the JWT token and clearing the `token` cookie.
+
+---
+
+### Request Method
+**GET**
+
+---
+
+### Request Headers
+- **Authorization:** `Bearer <JWT token>` (or as a cookie)
+
+---
+
+### Response
+
+#### Success Response
+- **Status Code:** `200 OK`
+- **Body:**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+#### Error Responses
+
+| Status Code | Description                                  | Example                                      |
+|-------------|----------------------------------------------|----------------------------------------------|
+| 401 Unauthorized | Missing or invalid token                 | `{ "message": "Unauthorized" }`              |
+| 500 Server Error | Server-side issue                        | `{ "error": "Internal server error" }`       |
+
+---
+
+### Notes
+- After logout, the JWT token will be blacklisted and cannot be used again.
+- Ensure the JWT token is sent in the `Authorization` header or as a
